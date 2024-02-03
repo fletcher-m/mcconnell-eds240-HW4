@@ -1,0 +1,110 @@
+---
+
+title: "HW 2 Exploration"
+author: Fletcher McConnell
+output: html
+
+---
+
+```{r, include=FALSE}
+# load packages ----
+library(tidyverse)
+library(here)
+library(readr)
+library(janitor)
+```
+
+```{r}
+# read in shark attack data ----
+sharks <- read_delim(here("data", "global-shark-attack.csv"), delim = ";")
+```
+
+## Data Wrangling / Cleaning
+
+```{r}
+# wrangle data ----
+sharks <- sharks |> 
+  clean_names() |> 
+  select(date, year, country, area, activity, sex, age, injury, fatal_y_n, time, species)
+```
+
+## Exploratory Plots
+
+```{r}
+# filter for only M and F values in "sex" column
+sharks_sex <- sharks |> 
+  filter(sex %in% c("M", "F"))
+# plot total number of attacks for M vs. F 
+ggplot(sharks_sex, aes(x = sex, fill = sex)) +
+  geom_bar() +
+  labs(title = "Total Number of Shark Attacks by Gender")
+```
+```{r}
+# filter to years 1950 to 2023 and count the total number of attacks per year
+attacks_by_year <- sharks %>%
+  filter(year %in% c(1950:2023)) |> 
+  group_by(year) %>%
+  summarize(Attacks = n())
+
+# visualize total number of attacks per year
+ggplot(attacks_by_year, aes(x = year, y = Attacks)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = "Total Number of Shark Attacks by Year",
+       x = "Year", y = "Number of Attacks") +
+  theme_minimal()
+```
+```{r}
+# calculate the tota number of attacks by activity
+# count for swimming
+swimming_count <- sum(grepl("swimming", sharks$activity, ignore.case = TRUE))
+swimming_count
+
+# count for fishing
+fishing_count <- sum(grepl("fishing", sharks$activity, ignore.case = TRUE))
+fishing_count
+
+# count for surfing, body boarding
+surfing_count <- sum(grepl("surfing|boarding", sharks$activity, ignore.case = TRUE))
+surfing_count
+
+# count for diving
+diving_count <- sum(grepl("diving", sharks$activity, ignore.case = TRUE))
+diving_count
+
+# count for 
+wading_count <- sum(grepl("playing|wading|standing", sharks$activity, ignore.case = TRUE))
+wading_count
+```
+
+```{r}
+# assign labels for each activity count
+activity_counts <- data.frame(
+  Activity = c("Swimming", "Fishing", "Surfing/Boarding", "Diving", "Playing/Wading/Standing"),
+  Count = c(swimming_count, fishing_count, surfing_count, diving_count, wading_count)
+) |> arrange(desc(Count))
+
+# visualize counts by activity with a pie chart
+ggplot(activity_counts, aes(x = "", y = Count, fill = reorder(Activity, -Count))) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y", start = 0) +
+  labs(title = "Number of Shark Attacks by Activity",
+       fill = "Activity") +
+  theme_void() +
+  theme(legend.position = "right")
+```
+## Questions
+
+1. What have you learned about your data? Have any potentially interesting patterns emerged? (5-8 sentences)
+
+--> From this data, I have learned that there are some patterns, but that these are patterns I expected. It is expected that surfing, fishing and swimming would be some of the top activities where a shark attack is involved. It is interesting, however, how close these three are in total counts. I would have expected fishing to have a lower count, as you are normally not in the water with the sharks when you are fishing. There is also an interesting peak in the number of attacks around 1960. I think this is something I might want to research to see if there were any external events going on here.   
+
+2. In HW #1, you outlined some questions that you wanted to answer using these data. Have you made any strides towards answering those questions? If yes, how so? If no, what next steps do you need to take (e.g. I need to create X plot type, I still need to track down Y data, I need to restructure existing data so that you can visualize it in Z ways, etc.)? (8-12 sentences)
+
+--> I think I did make a little progress into some of the questions that I originally had. I got a better idea of trends in the timeline, although I still want to look at the time of day that attacks occur and see if any patterns emerge there. I like how I visualized attacks per activity. I think this is an interesting finding, even if it is expected. I did not look into attacks by species of shark. This is something that I want to look more into. The way that the species is documented is not consistent and there are lots of missing values, so I'm not sure how effective or accurate that analysis might be. I think a next step might be to do a little bit of outside research on shark attacks to give me a better idea of what sort of differences or patterns I should for extracting from this data.   
+
+3. What challenges do you foresee encountering with your data? These can be data wrangling and / or visualization challenges. (4-6 sentences)
+
+--> The biggest challenge that I see with this data is the inconsistency in naming conventions within each category. For example, in the activities column, "spearfishing" and "fishing" are different categories. It is difficult to decide to group these together in a singular "fishing" category or keep them separate. Spearfishing seems like it would have a higher probability of attack, since you are in the same environment as the sharks (and often with a bloody fish with you). Another example is the "injury" column, which has detailed descriptions but these descriptions make it difficult to make any groupings for data analysis. 
+
+
+
